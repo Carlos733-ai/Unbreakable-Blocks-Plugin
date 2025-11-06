@@ -1,0 +1,22 @@
+name: UnbreakableBlocksCustom
+main: com.carlos.unbreakable.Main
+version: 1.1
+api-version: 1.21
+description: Prevents specific block types from being broken, with add/remove commands.
+commands:
+  unbreakable:
+    description: Manage unbreakable blocks
+    usage: /unbreakable <add|remove|list> [block]
+permissions:
+  unbreakable.add:
+    description: Allows adding new unbreakable blocks
+    default: op
+  unbreakable.remove:
+    description: Allows removing unbreakable blocks
+    default: op
+  unbreakable.list:
+    description: Allows listing unbreakable blocks
+    default: op
+  unbreakable.bypass:
+    description: Allows breaking unbreakable blocks
+    default: op
