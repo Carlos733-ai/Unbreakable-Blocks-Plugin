@@ -1,8 +1,6 @@
-# 🛡️ UnbreakableBlocks: Moderinth Security
+# 🛡️ UnbreakableBlocks
 
 [![Minecraft Version](https://img.shields.io/badge/Minecraft-1.21+-blue.svg)](https://www.spigotmc.org/resources/spigot.5645/)
-[![License](https://img.shields.io/github/license/Carlos/UnbreakableBlocks)](LICENSE)
-[![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/Carlos/UnbreakableBlocks/main.yml?branch=main)](https://github.com/Carlos/UnbreakableBlocks/actions)
 
 ## 🌟 Overview
 
