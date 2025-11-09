@@ -1,12 +1,16 @@
-# 🛡️ UnbreakableBlocks
+# 🛡️ UnbreakableBlocks: Moderinth Security
 
-[![Minecraft Version](https://img.shields.io/badge/Minecraft-1.21+-blue.svg)](https://www.spigotmc.org/resources/spigot.5645/)
+[![Minecraft Version](https://img.shields.io/badge/Minecraft-1.21%2B-blue.svg)](https://www.spigotmc.org/resources/spigot.5645/)
+[![GitHub Repository](https://img.shields.io/badge/GitHub-Carlos733--ai%2FUnbreakable--Blocks--Plugin-brightgreen)](https://github.com/Carlos733-ai/Unbreakable-Blocks-Plugin/tree/main)
+[![License](https://img.shields.io/github/license/Carlos733-ai/Unbreakable-Blocks-Plugin)](https://github.com/Carlos733-ai/Unbreakable-Blocks-Plugin/blob/main/LICENSE)
 
 ## 🌟 Overview
 
 **UnbreakableBlocks** provides a definitive, "set-it-and-forget-it" method for managing block integrity on your Minecraft server. It transforms designated block materials into **Moderinth Security** features, offering robust protection that cannot be bypassed by players, explosions, or pistons.
 
 This plugin is ideal for server owners who need absolute control over specific structural elements, custom terrain, or secure player-placed assets.
+
+---
 
 ## ✨ Key Features
 
@@ -17,6 +21,8 @@ This plugin is ideal for server owners who need absolute control over specific s
     * 🚫 **Pistons:** Cannot be pushed or pulled (`BlockPistonExtend/RetractEvent`).
 * **Admin Management:** Full command suite including `/unbreakable check` to instantly verify ownership and status.
 
+---
+
 ## 🛠️ Installation & Usage (Source Code)
 
 This guide is for compiling the project from source. If you are a server owner, please use the pre-compiled JAR available on Modrinth or Spigot.
@@ -24,29 +30,26 @@ This guide is for compiling the project from source. If you are a server owner, 
 ### Prerequisites
 
 * **Java Development Kit (JDK) 17 or newer**
-* A recent **Spigot/Paper API JAR** (e.g., `spigot-api-1.21.jar`)
+* A recent **Spigot/Paper API JAR** (for Minecraft 1.21+)
 
 ### Compilation Steps
 
 1.  **Clone the Repository:**
     ```bash
-    git clone [https://github.com/Carlos/UnbreakableBlocks.git](https://github.com/Carlos/UnbreakableBlocks.git)
-    cd UnbreakableBlocks
+    git clone [https://github.com/Carlos733-ai/Unbreakable-Blocks-Plugin.git](https://github.com/Carlos733-ai/Unbreakable-Blocks-Plugin.git)
+    cd Unbreakable-Blocks-Plugin
     ```
 
 2.  **Ensure Dependencies are Present:**
-    Place your Spigot/Paper API JAR (e.g., `spigot-api-1.21.jar`) in a convenient location (or modify the compilation command to point to it).
+    Place your Spigot/Paper API JAR (e.g., `spigot-api-1.21.jar`) in a convenient location.
 
 3.  **Compile the Source:**
     Assuming your source files are in `src/com/carlos/unbreakable/` and your API JAR is named `spigot-api-1.21.jar` in the root directory:
     ```bash
-    # Step 3a: Compile the Java class
+    # Step 3a: Compile the Java class (replace JAR name as needed)
     javac -cp "spigot-api-1.21.jar" src/com/carlos/unbreakable/Main.java
 
-    # Step 3b: Create the plugin.yml (ensure this file is in the root!)
-    # (If using a tool like Maven/Gradle, this is handled automatically.)
-    
-    # Step 3c: Package into a JAR file
+    # Step 3b: Package into a JAR file (ensure plugin.yml is in the root!)
     jar cf UnbreakableBlocks.jar plugin.yml -C src/com/carlos/unbreakable .
     ```
 
@@ -70,7 +73,7 @@ This guide is for compiling the project from source. If you are a server owner, 
 
 ## 🤝 Contributing
 
-We welcome contributions! If you have suggestions for new features, bug reports, or want to contribute code, please open an issue or submit a pull request on GitHub.
+We welcome contributions! If you have suggestions for new features, bug reports, or want to contribute code, please open an issue or submit a pull request on the [GitHub repository](https://github.com/Carlos733-ai/Unbreakable-Blocks-Plugin/tree/main).
 
 ---
 *Created by Carlos*
