@@ -2,7 +2,7 @@
 
 [![Minecraft Version](https://img.shields.io/badge/Minecraft-1.21%2B-blue.svg)](https://www.spigotmc.org/resources/spigot.5645/)
 [![GitHub Repository](https://img.shields.io/badge/GitHub-Carlos733--ai%2FUnbreakable--Blocks--Plugin-brightgreen)](https://github.com/Carlos733-ai/Unbreakable-Blocks-Plugin/tree/main)
-[![License](https://img.shields.io/github/license/Carlos733-ai/Unbreakable-Blocks-Plugin)](https://github.com/Carlos733-ai/Unbreakable-Blocks-Plugin/blob/main/LICENSE)
+
 
 ## 🌟 Overview
 
@@ -69,11 +69,4 @@ This guide is for compiling the project from source. If you are a server owner, 
 | - | Allows a player to bypass all protection and break any unbreakable block. | `unbreakable.bypass` | `op` |
 | - | General permission for using admin subcommands (`add`, `remove`, `check`). | `unbreakable.admin` | `op` |
 
----
 
-## 🤝 Contributing
-
-We welcome contributions! If you have suggestions for new features, bug reports, or want to contribute code, please open an issue or submit a pull request on the [GitHub repository](https://github.com/Carlos733-ai/Unbreakable-Blocks-Plugin/tree/main).
-
----
-*Created by Carlos*
