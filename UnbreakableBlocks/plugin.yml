@@ -1,0 +1,28 @@
+name: UnbreakableBlocks
+version: 1.0
+main: com.carlos.unbreakable.Main
+api-version: 1.21
+authors: [Carlos]
+commands:
+  unbreakable:
+    description: Manages unbreakable block types.
+    usage: /unbreakable <add|remove|list|check>
+permissions:
+  unbreakable.admin:
+    description: Access to all admin commands (/unbreakable).
+    default: op
+  unbreakable.add:
+    description: Allows adding blocks to the unbreakable list.
+    default: op
+  unbreakable.remove:
+    description: Allows removing blocks from the unbreakable list.
+    default: op
+  unbreakable.list:
+    description: Allows listing unbreakable blocks.
+    default: true
+  unbreakable.check:
+    description: Allows checking block ownership.
+    default: op
+  unbreakable.bypass:
+    description: Allows breaking any unbreakable block.
+    default: op
