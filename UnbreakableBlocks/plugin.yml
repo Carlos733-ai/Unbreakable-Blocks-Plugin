@@ -1,28 +1,41 @@
 name: UnbreakableBlocks
-version: 1.0
 main: com.carlos.unbreakable.Main
+version: 1.0.0
 api-version: 1.21
-authors: [Carlos]
+description: |
+  Fully-featured Unbreakable Blocks Plugin by Carlos215.
+  Tracks block ownership, reinforced blocks, trust, piston/explosion protection, and more.
+author: Carlos215
 commands:
   unbreakable:
-    description: Manages unbreakable block types.
-    usage: /unbreakable <add|remove|list|check>
+    description: Main command to manage unbreakable blocks
+    usage: /<command> <add|remove|list|check|trust|untrust|region>
+    aliases: [ublock, ub]
 permissions:
   unbreakable.admin:
-    description: Access to all admin commands (/unbreakable).
+    description: Allows full admin control of the plugin
     default: op
   unbreakable.add:
-    description: Allows adding blocks to the unbreakable list.
+    description: Allows adding unbreakable blocks
     default: op
   unbreakable.remove:
-    description: Allows removing blocks from the unbreakable list.
+    description: Allows removing unbreakable blocks
     default: op
   unbreakable.list:
-    description: Allows listing unbreakable blocks.
+    description: Allows listing unbreakable blocks
     default: true
   unbreakable.check:
-    description: Allows checking block ownership.
-    default: op
+    description: Allows checking ownership of blocks
+    default: true
   unbreakable.bypass:
-    description: Allows breaking any unbreakable block.
+    description: Allows bypassing block protections
+    default: op
+  unbreakable.trust:
+    description: Allows trusting other players on blocks
+    default: op
+  unbreakable.untrust:
+    description: Allows removing trust from players
+    default: op
+  unbreakable.region:
+    description: Allows managing protected regions
     default: op
