@@ -3,70 +3,89 @@
 [![Minecraft Version](https://img.shields.io/badge/Minecraft-1.21%2B-blue.svg)](https://www.spigotmc.org/resources/spigot.5645/)
 [![GitHub Repository](https://img.shields.io/badge/GitHub-Carlos733--ai%2FUnbreakable--Blocks--Plugin-brightgreen)](https://github.com/Carlos733-ai/Unbreakable-Blocks-Plugin/tree/main)
 
+---
 
 ## 🌟 Overview
 
-**UnbreakableBlocks** provides a definitive, "set-it-and-forget-it" method for managing block integrity on your Minecraft server. It transforms designated block materials into **Moderinth Security** features, offering robust protection that cannot be bypassed by players, explosions, or pistons.
+**UnbreakableBlocks** provides a definitive, "set-it-and-forget-it" system for enforcing block integrity across Minecraft servers. It converts selected block materials into **Moderinth Security-protected assets**, ensuring they cannot be broken, moved, or destroyed through normal gameplay mechanics.
 
-This plugin is ideal for server owners who need absolute control over specific structural elements, custom terrain, or secure player-placed assets.
+This plugin is designed for server owners who require strict control over builds, protected structures, and grief-resistant environments.
 
 ---
 
 ## ✨ Key Features
 
-* **Material-Level Protection:** Designate **any Minecraft block material** as unbreakable using a simple in-game command (`/unbreakable add`).
-* **Persistent Block Ownership:** When a player places a tracked block, their **UUID ownership is recorded and saved to disk** (`placed_blocks.yml`). Only the original placer or an authorized admin can remove it.
-* **Total Anti-Griefing:** Unbreakable blocks are immune to all common bypass methods:
-    * 🛑 **Explosions:** Ignored by TNT, Creepers, and Wither blasts (`EntityExplodeEvent`).
-    * 🚫 **Pistons:** Cannot be pushed or pulled (`BlockPistonExtend/RetractEvent`).
-* **Admin Management:** Full command suite including `/unbreakable check` to instantly verify ownership and status.
+* **Material-Level Protection:** Mark any Minecraft block material as unbreakable using `/unbreakable add`.
+* **Persistent Ownership System:** Tracks block placement using player UUIDs, stored in `placed_blocks.yml`.
+* **Grief Prevention Engine:** Blocks are protected against all common destruction methods:
+  * 🛑 Explosions (TNT, Creepers, Withers) via `EntityExplodeEvent`
+  * 🚫 Pistons via `BlockPistonExtendEvent` and `BlockPistonRetractEvent`
+  * 🔨 Unauthorized breaking attempts
+* **Admin Verification Tools:** Instantly check block ownership and protection status with `/unbreakable check`.
 
 ---
 
 ## 🛠️ Installation & Usage (Source Code)
 
-This guide is for compiling the project from source. If you are a server owner, please use the pre-compiled JAR available on Modrinth or Spigot.
+This section is intended for developers compiling from source. Server owners should use the prebuilt JAR release.
 
 ### Prerequisites
 
-* **Java Development Kit (JDK) 17 or newer**
-* A recent **Spigot/Paper API JAR** (for Minecraft 1.21+)
-
-### Compilation Steps
-
-1.  **Clone the Repository:**
-    ```bash
-    git clone [https://github.com/Carlos733-ai/Unbreakable-Blocks-Plugin.git](https://github.com/Carlos733-ai/Unbreakable-Blocks-Plugin.git)
-    cd Unbreakable-Blocks-Plugin
-    ```
-
-2.  **Ensure Dependencies are Present:**
-    Place your Spigot/Paper API JAR (e.g., `spigot-api-1.21.jar`) in a convenient location.
-
-3.  **Compile the Source:**
-    Assuming your source files are in `src/com/carlos/unbreakable/` and your API JAR is named `spigot-api-1.21.jar` in the root directory:
-    ```bash
-    # Step 3a: Compile the Java class (replace JAR name as needed)
-    javac -cp "spigot-api-1.21.jar" src/com/carlos/unbreakable/Main.java
-
-    # Step 3b: Package into a JAR file (ensure plugin.yml is in the root!)
-    jar cf UnbreakableBlocks.jar plugin.yml -C src/com/carlos/unbreakable .
-    ```
-
-4.  **Deployment:**
-    Copy the resulting `UnbreakableBlocks.jar` file into your server's `plugins/` directory and restart/reload the server.
+* Java Development Kit (JDK) **17+**
+* Spigot or Paper API for **Minecraft 1.21+**
 
 ---
 
-## 📜 Commands & Permissions
+### Compilation Steps
 
-| Command | Description | Permission | Default |
-| :--- | :--- | :--- | :--- |
-| `/unbreakable add [material]` | Makes the block you're looking at (or specified material) unbreakable. | `unbreakable.add` | `op` |
-| `/unbreakable remove [material]` | Removes protection from a block type. | `unbreakable.remove` | `op` |
-| `/unbreakable list` | Displays all currently unbreakable block types. | `unbreakable.list` | `true` |
-| `/unbreakable check` | Checks ownership and status of the block you are looking at. | `unbreakable.check` | `op` |
-| - | Allows a player to bypass all protection and break any unbreakable block. | `unbreakable.bypass` | `op` |
-| - | General permission for using admin subcommands (`add`, `remove`, `check`). | `unbreakable.admin` | `op` |
-
-
+1. **Clone Repository**
+```bash
+git clone https://github.com/Carlos733-ai/Unbreakable-Blocks-Plugin.git
+cd Unbreakable-Blocks-Plugin
+Add Spigot/Paper API
+Place your API jar (example: spigot-api-1.21.jar) into the project directory or reference its path.
+Compile Source
+javac -cp "spigot-api-1.21.jar" src/com/carlos/unbreakable/Main.java
+Build Plugin JAR
+jar cf UnbreakableBlocks.jar plugin.yml -C src/com/carlos/unbreakable .
+Install on Server
+Move UnbreakableBlocks.jar into your /plugins folder and restart the server.
+📜 Commands & Permissions
+Command	Description	Permission	Default
+/unbreakable add [material]	Marks a block type as unbreakable	unbreakable.add	OP
+/unbreakable remove [material]	Removes block protection	unbreakable.remove	OP
+/unbreakable list	Lists all protected materials	unbreakable.list	Everyone
+/unbreakable check	Checks ownership & status of targeted block	unbreakable.check	OP
+/unbreakable reload	Reloads plugin configuration	unbreakable.admin	OP
+/unbreakable bypass	Allows bypassing all protections	unbreakable.bypass	OP
+📦 Patch Logs / Changelog
+v1.0.0 — Core Release
+Initial plugin system introduced
+Material-based unbreakable blocks implemented
+Basic command system added
+UUID ownership tracking enabled
+v1.1.0 — Anti-Grief Update
+Added explosion protection (TNT, Creeper, Wither)
+Added piston protection system
+Improved event cancellation logic
+Fixed indirect block destruction edge cases
+v1.2.0 — Admin Expansion
+Added /unbreakable check
+Introduced permission hierarchy system
+Added bypass permission (unbreakable.bypass)
+Improved command stability
+v1.3.0 — Data Persistence Update
+Added placed_blocks.yml storage system
+Fixed data loss on server restart
+Optimized UUID lookup performance
+Reduced disk write overhead
+v1.4.0 — Stability Patch
+Improved large-world performance
+Reduced event listener lag
+Hardened protection against plugin conflicts
+Fixed rare duplication exploits
+🚧 Planned Features
+Region-based protection zones
+GUI block manager interface
+Per-world configuration support
+Web dashboard integration (future MCSH expansion)
