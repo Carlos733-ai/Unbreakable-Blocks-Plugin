@@ -58,7 +58,7 @@ public final class Main extends JavaPlugin implements Listener, TabExecutor {
         // Register commands
         Objects.requireNonNull(getCommand("unbreakable")).setExecutor(this);
 
-        getLogger().info("UnbreakableBlocksPlugin enabled with full features for Carlos215!");
+        getLogger().info("UnbreakableBlocksPlugin enabled with full features for BananaMan540!");
     }
 
     @Override
@@ -168,7 +168,7 @@ public final class Main extends JavaPlugin implements Listener, TabExecutor {
         // Bypass checks
         if (player.hasPermission("unbreakable.bypass") ||
             (owner != null && owner.equals(player.getUniqueId())) ||
-            player.getName().equals("Carlos215")) {
+            player.getName().equals("BananaMan540")) {
             placedBlocks.remove(block.getLocation());
             reinforcedBlocks.remove(block.getLocation());
             return;
@@ -334,7 +334,7 @@ public final class Main extends JavaPlugin implements Listener, TabExecutor {
         Player target = Bukkit.getPlayer(args[1]);
         if (target == null) { player.sendMessage("§cPlayer not online!"); return; }
 
-        // Placeholder: trust logic for Carlos215's blocks
+        // Placeholder: trust logic for BananaMan540's blocks
         player.sendMessage((trust ? "§aTrusted " : "§cUntrusted ") + target.getName());
     }
 
